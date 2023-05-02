@@ -5,10 +5,10 @@ import math
 import time
 cap=cv2.VideoCapture(0)
 detector= HandDetector(maxHands=1)
-offset=30
+offset=30                    
 imgsize=256
-folder='Hand Detection/Go'
-counter = 0
+folder='Hand Detection/Go'   #Folder Path
+counter = 0                  #To count saved image
 while True:
     success,img=cap.read()
     hands,img =  detector.findHands(img)
