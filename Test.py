@@ -9,15 +9,17 @@ offset=30
 imgsize=256
 class_name=['Go','Left','Right']
 model=tf.keras.models.load_model("hand_model1.h5")   #load our model
-cap= cv2.VideoCapture(0)
+url = "http://192.168.100.9:8080/video"
+cap = cv2.VideoCapture(url)
 previous= "G"
 while True:
     success,img=cap.read()
-    hands,img =  detector.findHands(img)
+    Output= img.copy()
+    hands,img=detector.findHands(img)
     if hands:
-        hand=hand[0]
+        hand=hands[0]
         x,y,w,h=hand['bbox']
-        whiteimg=np.ones((imgsize,imgsize,3),np.uint8)
+        whiteimg=np.ones((imgsize,imgsize,3),np.uint8)*255
         croped_img=img[ y-offset:y+h+offset , x-offset:x+w+offset ]
         
         ratio= h/w
@@ -27,6 +29,7 @@ while True:
             resize_img=cv2.resize(croped_img,(new_w,imgsize))
             w_gap= math.ceil((imgsize-new_w)/2)
             whiteimg[:,w_gap:new_w+w_gap]=resize_img
+
         else:
             constant=imgsize/w
             new_h= math.ceil(constant * h)
@@ -34,15 +37,13 @@ while True:
             h_gap= math.ceil((imgsize-new_h)/2)
             whiteimg[h_gap:new_h+h_gap,:]=resize_img
         cv2.imshow("Croped Image",whiteimg)
-    image = np.expand_dims(whiteimg, axis=0)
-    predictions=model.predict(image)
+    data = np.expand_dims(whiteimg, axis=0)
+    predictions=model.predict(data)
     predicted_class=class_name[np.argmax(predictions[0])]
-    if predicted_class!= previous:
-            previous=predicted_class
-            print(predicted_class)
-    cv2.imshow("Video",img)
-    if cv2.waitKey(0) & 0xFF == ord ('q'):
+    cv2.putText(Output,predicted_class,(x,y-20),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,255),2)
+    cv2.rectangle(Output,(x-offset,y-offset),(x+w+offset,y+h+offset),(0,255,0),4)
+    cv2.imshow("Video",Output)
+    if cv2.waitKey(1) & 0xFF == ord ('q'):
         break
-
 cap.release()
 cv2.destroyAllWindows()
